@@ -1,19 +1,28 @@
+import { prisma } from "@/lib/db";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import Image from "next/image";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Our Story - Nankilly" };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const aboutImage = await prisma.siteImage.findUnique({ where: { key: "about_hero" } });
+
   return (
     <>
       <Nav />
       <section style={{ paddingTop: 60 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "85vh" }}>
-          <div style={{ background: "linear-gradient(145deg, var(--sky-pale), var(--linen), var(--sand))", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", minHeight: 500 }}>
-            <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: 80, background: "var(--blush)" }} />
-            <div style={{ position: "absolute", top: 0, left: 0, width: 80, height: 4, background: "var(--blush)" }} />
-            <span style={{ fontSize: 11, color: "var(--ink-soft)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Emily at Nankilly Farm</span>
+          <div style={{ background: "linear-gradient(145deg, var(--sky-pale), var(--linen), var(--sand))", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", minHeight: 500, overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: 80, background: "var(--blush)", zIndex: 1 }} />
+            <div style={{ position: "absolute", top: 0, left: 0, width: 80, height: 4, background: "var(--blush)", zIndex: 1 }} />
+            {aboutImage?.url ? (
+              <Image src={aboutImage.url} alt={aboutImage.alt || "Emily at Nankilly Farm"} fill style={{ objectFit: "cover" }} sizes="50vw" priority />
+            ) : (
+              <span style={{ fontSize: 11, color: "var(--ink-soft)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Emily at Nankilly Farm</span>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "clamp(40px,5vw,80px) clamp(28px,4vw,64px)" }}>
             <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--cornflower)", marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>

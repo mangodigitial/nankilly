@@ -21,6 +21,10 @@ type Message = {
   read: boolean; createdAt: string;
 };
 
+type SiteImage = {
+  id: string; key: string; label: string; url: string | null; alt: string | null;
+};
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "#F59E0B", paid: "#3B82F6", making: "#8B5CF6",
   shipped: "#10B981", delivered: "#6B7280",
@@ -33,10 +37,12 @@ export default function AdminPage() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [loginErr, setLoginErr] = useState("");
-  const [tab, setTab] = useState<"orders" | "products" | "messages">("orders");
+  const [tab, setTab] = useState<"orders" | "products" | "messages" | "images">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [siteImages, setSiteImages] = useState<SiteImage[]>([]);
+  const [uploadingSiteImage, setUploadingSiteImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null); // null = closed, "new" = new, id = editing
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -54,15 +60,42 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     setLoading(true);
-    const [oR, pR, mR] = await Promise.all([
+    const [oR, pR, mR, siR] = await Promise.all([
       fetch("/api/admin/orders"),
       fetch("/api/admin/products"),
       fetch("/api/admin/messages"),
+      fetch("/api/admin/site-images"),
     ]);
     if (oR.ok) setOrders(await oR.json());
     if (pR.ok) setProducts(await pR.json());
     if (mR.ok) setMessages(await mR.json());
+    if (siR.ok) setSiteImages(await siR.json());
     setLoading(false);
+  };
+
+  const uploadSiteImage = async (key: string, file: File) => {
+    setUploadingSiteImage(key);
+    const form = new FormData();
+    form.append("file", file);
+    const upRes = await fetch("/api/admin/upload", { method: "POST", body: form });
+    if (!upRes.ok) { setUploadingSiteImage(null); return; }
+    const { url } = await upRes.json();
+    await fetch("/api/admin/site-images", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, url }),
+    });
+    setUploadingSiteImage(null);
+    loadAll();
+  };
+
+  const removeSiteImage = async (key: string) => {
+    await fetch("/api/admin/site-images", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, url: null, alt: null }),
+    });
+    loadAll();
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -132,7 +165,7 @@ export default function AdminPage() {
           <span style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 300 }}>Admin</span>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
-          {(["orders", "products", "messages"] as const).map((t) => (
+          {(["orders", "products", "messages", "images"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: "8px 20px", background: tab === t ? "rgba(255,255,255,0.1)" : "transparent",
               border: "none", color: tab === t ? "white" : "rgba(255,255,255,0.5)",
@@ -269,6 +302,41 @@ export default function AdminPage() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ── SITE IMAGES ── */}
+        {tab === "images" && (
+          <div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400, marginBottom: 8 }}>Site Images</h2>
+            <p style={{ fontSize: 13, color: "#7A7670", fontWeight: 300, marginBottom: 28 }}>Upload images for pages across the site. Changes appear immediately.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+              {siteImages.map((si) => (
+                <div key={si.key} style={{ background: "white", border: "1px solid rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                  <div style={{ height: 200, background: "#D6E8F0", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
+                    {si.url ? (
+                      <>
+                        <img src={si.url} alt={si.alt || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button onClick={() => removeSiteImage(si.key)} style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "white", border: "none", cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>x</button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 11, color: "#7A7670", textTransform: "uppercase" }}>No image</span>
+                    )}
+                  </div>
+                  <div style={{ padding: 16 }}>
+                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 400, marginBottom: 4 }}>{si.label}</div>
+                    <div style={{ fontSize: 11, color: "#B5AFA8", marginBottom: 12 }}>{si.key}</div>
+                    <label style={{ display: "inline-block", padding: "8px 16px", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A7670" }}>
+                      {uploadingSiteImage === si.key ? "Uploading..." : si.url ? "Replace" : "Upload"}
+                      <input type="file" accept="image/*" onChange={(e) => { if (e.target.files?.[0]) uploadSiteImage(si.key, e.target.files[0]); }} style={{ display: "none" }} />
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {siteImages.length === 0 && !loading && (
+              <p style={{ fontSize: 14, color: "#7A7670", fontWeight: 300 }}>No image slots found. Run database seed to create them.</p>
             )}
           </div>
         )}

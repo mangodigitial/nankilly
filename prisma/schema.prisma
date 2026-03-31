@@ -148,6 +148,16 @@ model OrderItem {
   createdAt       DateTime @default(now())
 }
 
+// ── Editable site images ──
+model SiteImage {
+  id        String  @id @default(cuid())
+  key       String  @unique // hero, maker, bespoke_1, bespoke_2, about_hero
+  label     String  // Human-readable label for admin UI
+  url       String?
+  alt       String?
+  updatedAt DateTime @updatedAt
+}
+
 // ── Contact form submissions ──
 model ContactMessage {
   id        String   @id @default(cuid())

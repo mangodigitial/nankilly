@@ -153,6 +153,25 @@ async function main() {
   }
 
   console.log("Sample products created");
+
+  // Create site image slots
+  const siteImages = [
+    { key: "hero", label: "Homepage Hero" },
+    { key: "maker", label: "Homepage - Emily Photo" },
+    { key: "bespoke_1", label: "Homepage - Bespoke Left" },
+    { key: "bespoke_2", label: "Homepage - Bespoke Right" },
+    { key: "about_hero", label: "About Page Hero" },
+  ];
+
+  for (const si of siteImages) {
+    await prisma.siteImage.upsert({
+      where: { key: si.key },
+      update: {},
+      create: si,
+    });
+  }
+  console.log("Site image slots created");
+
   console.log("\nDone! Change Emily's password after first login.");
 }
 

@@ -4,25 +4,30 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import HomeHero from "./HomeHero";
 import Link from "next/link";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const featured = await prisma.product.findMany({
-    where: { active: true, featured: true },
-    include: { category: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-    take: 9,
-  });
+  const [featured, categories, siteImages] = await Promise.all([
+    prisma.product.findMany({
+      where: { active: true, featured: true },
+      include: { category: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
+      take: 9,
+    }),
+    prisma.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      include: { _count: { select: { products: { where: { active: true } } } } },
+    }),
+    prisma.siteImage.findMany(),
+  ]);
 
-  const categories = await prisma.category.findMany({
-    orderBy: { sortOrder: "asc" },
-    include: { _count: { select: { products: { where: { active: true } } } } },
-  });
+  const img = (key: string) => siteImages.find((i) => i.key === key)?.url || null;
 
   return (
     <>
       <Nav />
-      <HomeHero />
+      <HomeHero imageUrl={img("hero")} />
 
       {/* Wave divider */}
       <svg viewBox="0 0 1440 52" fill="none" preserveAspectRatio="none" style={{ width: "100%", display: "block", marginTop: -1 }}>
@@ -87,8 +92,12 @@ export default async function HomePage() {
       {/* Maker section */}
       <section style={{ background: "var(--sand)", position: "relative", overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "60vh" }}>
-          <div style={{ background: "linear-gradient(135deg, var(--sky-pale), var(--linen))", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
-            <span style={{ fontSize: 11, color: "var(--ink-soft)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Emily photo</span>
+          <div style={{ background: "linear-gradient(135deg, var(--sky-pale), var(--linen))", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, position: "relative", overflow: "hidden" }}>
+            {img("maker") ? (
+              <Image src={img("maker")!} alt="Emily at Nankilly Farm" fill style={{ objectFit: "cover" }} sizes="50vw" />
+            ) : (
+              <span style={{ fontSize: 11, color: "var(--ink-soft)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Emily photo</span>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: "clamp(40px,5vw,80px) clamp(28px,4vw,64px)" }}>
             <span style={{ fontSize: 11, fontWeight: 300, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--cornflower)", marginBottom: 20, display: "block" }}>The Maker</span>
@@ -126,11 +135,15 @@ export default async function HomePage() {
             </Link>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase" }}>
-              Photo
+            <div style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", position: "relative", overflow: "hidden" }}>
+              {img("bespoke_1") ? (
+                <Image src={img("bespoke_1")!} alt="Bespoke crafting" fill style={{ objectFit: "cover" }} sizes="25vw" />
+              ) : "Photo"}
             </div>
-            <div style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", marginTop: 40 }}>
-              Photo
+            <div style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", marginTop: 40, position: "relative", overflow: "hidden" }}>
+              {img("bespoke_2") ? (
+                <Image src={img("bespoke_2")!} alt="Personalised pieces" fill style={{ objectFit: "cover" }} sizes="25vw" />
+              ) : "Photo"}
             </div>
           </div>
         </div>

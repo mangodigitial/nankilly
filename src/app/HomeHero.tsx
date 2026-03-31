@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
-export default function HomeHero() {
+export default function HomeHero({ imageUrl }: { imageUrl?: string | null }) {
   return (
     <section style={{ minHeight: "100vh", position: "relative", display: "flex", alignItems: "flex-end", overflow: "hidden", background: "var(--navy)" }}>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, var(--navy) 0%, var(--ocean-deep) 35%, var(--ocean) 65%, var(--cornflower) 100%)" }} />
+      {imageUrl ? (
+        <Image src={imageUrl} alt="Nankilly Farm" fill style={{ objectFit: "cover" }} priority />
+      ) : (
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, var(--navy) 0%, var(--ocean-deep) 35%, var(--ocean) 65%, var(--cornflower) 100%)" }} />
+      )}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,58,82,0.9) 0%, rgba(28,58,82,0.3) 35%, transparent 65%)" }} />
 
       <div style={{ position: "relative", zIndex: 2, width: "100%", padding: "0 clamp(16px,4vw,48px) clamp(60px,10vh,120px)" }}>
