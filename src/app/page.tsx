@@ -152,7 +152,7 @@ export default async function HomePage() {
       {/* Info strip */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderTop: "1px solid rgba(0,0,0,0.06)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
         {[
-          { t: "Free UK Delivery", d: "On orders over £40" },
+          { t: "UK Delivery", d: "Flat rate £5.99 via Royal Mail" },
           { t: "Handmade to Order", d: "Crafted in our coastal studio" },
           { t: "Personalise It", d: "Names & messages stitched in" },
         ].map((item, i) => (

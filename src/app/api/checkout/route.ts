@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       (s: number, i: { unitPrice: number; quantity: number }) => s + i.unitPrice * i.quantity,
       0
     );
-    const deliveryFee = subtotal >= 4000 ? 0 : 350;
+    const deliveryFee = 599; // flat £5.99
     const total = subtotal + deliveryFee;
 
     // Generate order number: NK-YYMMDD-XXXX

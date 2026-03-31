@@ -46,7 +46,7 @@ export async function sendOrderConfirmation(order: {
         <table style="width:100%;border-collapse:collapse;font-size:14px">
           ${itemsHtml}
           <tr><td style="padding:8px 0;color:#7A7670">Subtotal</td><td style="padding:8px 0;text-align:right">&pound;${(order.subtotal / 100).toFixed(2)}</td></tr>
-          <tr><td style="padding:8px 0;color:#7A7670">Delivery</td><td style="padding:8px 0;text-align:right">${order.deliveryFee === 0 ? "Free" : "&pound;" + (order.deliveryFee / 100).toFixed(2)}</td></tr>
+          <tr><td style="padding:8px 0;color:#7A7670">Delivery</td><td style="padding:8px 0;text-align:right">&pound;${(order.deliveryFee / 100).toFixed(2)}</td></tr>
           <tr><td style="padding:12px 0;font-weight:600;border-top:1px solid #1E1E1C">Total</td><td style="padding:12px 0;text-align:right;font-weight:600;border-top:1px solid #1E1E1C;color:#3A6F8F">&pound;${(order.total / 100).toFixed(2)}</td></tr>
         </table>
         <div style="padding:24px 0;margin-top:16px;background:#FAF6F0;padding:20px;font-size:13px;color:#7A7670;line-height:1.6">

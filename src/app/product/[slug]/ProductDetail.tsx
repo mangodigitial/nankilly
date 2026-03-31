@@ -167,7 +167,7 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
             {tab === "delivery" && (
               <p style={{ fontSize: 14, lineHeight: 1.85, color: "var(--ink-mid)", fontWeight: 300 }}>
                 {product.inStock ? "In stock - despatched next working day via first class post." : "Handmade to order in 5-7 working days."}{" "}
-                {"Free UK delivery on orders over £40. International shipping available on request."}
+                {"UK delivery £5.99 via Royal Mail first class. International shipping available on request."}
               </p>
             )}
           </div>
@@ -315,7 +315,7 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "rgba(107,159,204,0.06)" }}>
               <svg width="14" height="12" viewBox="0 0 14 12" fill="none"><path d="M1 6h12M7 1l5 5-5 5" stroke="var(--cornflower)" strokeWidth="1" /></svg>
               <span style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 300 }}>
-                {total >= 4000 ? "Free UK delivery" : "£" + ((4000 - total) / 100).toFixed(2) + " more for free delivery"}
+                {"UK delivery £5.99"}
                 {product.inStock ? " - In stock, ships next day" : " - Handmade in 5-7 days"}
               </span>
             </div>

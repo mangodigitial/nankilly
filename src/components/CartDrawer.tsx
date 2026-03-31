@@ -135,8 +135,8 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 300 }}>Delivery</span>
-              <span style={{ fontSize: 12, color: deliveryFee === 0 ? "var(--ocean)" : "var(--ink)" }}>
-                {deliveryFee === 0 ? "Free" : "£" + (deliveryFee / 100).toFixed(2)}
+              <span style={{ fontSize: 12 }}>
+                {"£" + (deliveryFee / 100).toFixed(2)}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid rgba(0,0,0,0.05)", marginTop: 4 }}>

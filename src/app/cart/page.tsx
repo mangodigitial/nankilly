@@ -123,7 +123,7 @@ export default function CartPage() {
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 13 }}>
                       <span style={{ color: "var(--ink-soft)", fontWeight: 300 }}>Delivery</span>
-                      <span style={{ color: deliveryFee === 0 ? "var(--ocean)" : "var(--ink)" }}>{deliveryFee === 0 ? "Free" : "£" + (deliveryFee / 100).toFixed(2)}</span>
+                      <span>{"£" + (deliveryFee / 100).toFixed(2)}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid rgba(0,0,0,0.06)", marginTop: 8 }}>
                       <span style={{ fontSize: 16, fontWeight: 500 }}>Total</span>

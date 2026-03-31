@@ -71,7 +71,7 @@ export const useCart = create<CartState>()(
       clearCart: () => set({ items: [] }),
 
       subtotal: () => get().items.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
-      deliveryFee: () => (get().subtotal() >= 4000 ? 0 : 350), // 4000 pence = 40 pounds
+      deliveryFee: () => 599, // flat £5.99
       total: () => get().subtotal() + get().deliveryFee(),
       count: () => get().items.reduce((s, i) => s + i.quantity, 0),
     }),

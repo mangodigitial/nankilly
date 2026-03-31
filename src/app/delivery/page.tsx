@@ -53,8 +53,7 @@ export default function DeliveryPage() {
               icon: <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="6" width="24" height="16" rx="2" stroke="var(--cornflower)" strokeWidth="1.5" fill="none" /><path d="M2 10h24" stroke="var(--cornflower)" strokeWidth="1.5" /><rect x="6" y="14" width="8" height="4" rx="1" stroke="var(--cornflower)" strokeWidth="1" fill="none" /></svg>,
               title: "UK Delivery",
               lines: [
-                { l: "Orders over \u00A340", r: "Free", hl: true },
-                { l: "Orders under \u00A340", r: "\u00A33.50", hl: false },
+                { l: "All orders", r: "\u00A35.99", hl: true },
                 { l: "Sent via", r: "Royal Mail 1st Class", hl: false },
               ],
             },
