@@ -1,0 +1,81 @@
+:root {
+  --cornflower: #6B9FCC;
+  --sky: #A8CDE0;
+  --sky-pale: #D6E8F0;
+  --ocean: #3A6F8F;
+  --ocean-deep: #2A5A72;
+  --blush: #E0A4A0;
+  --rose: #C97B7B;
+  --petal: #F2D1CE;
+  --wildflower: #D4789A;
+  --sand: #F0E6D8;
+  --cream: #FAF6F0;
+  --linen: #F5EFE6;
+  --ink: #1E1E1C;
+  --ink-mid: #4A4845;
+  --ink-soft: #7A7670;
+  --white: #FFFDF9;
+  --navy: #1C3A52;
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-body: 'Outfit', system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { text-decoration: none; color: inherit; }
+
+button { font-family: var(--font-body); }
+
+input, textarea, select {
+  font-family: var(--font-body);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--cornflower) !important;
+}
+
+/* Stitch animation */
+@keyframes stitchDash {
+  to { stroke-dashoffset: -24; }
+}
+
+.stitch-animate {
+  animation: stitchDash 2s linear infinite;
+}
+
+/* Utility */
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+}
+
+.container-sm {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+}
+
+.container-xs {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+}

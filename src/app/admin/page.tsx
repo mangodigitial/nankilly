@@ -1,0 +1,321 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import ProductEditor from "@/components/admin/ProductEditor";
+
+type Order = {
+  id: string; orderNumber: string; status: string; customerName: string;
+  customerEmail: string; total: number; createdAt: string; addressLine1: string;
+  city: string; postcode: string;
+  items: { productName: string; quantity: number; sizeName?: string | null; fabricName?: string | null; personalisation?: string | null }[];
+};
+
+type Product = {
+  id: string; name: string; slug: string; price: number; active: boolean;
+  featured: boolean; badge?: string | null;
+  category: { name: string }; images: { url: string }[];
+};
+
+type Message = {
+  id: string; name: string; email: string; subject: string; message: string;
+  read: boolean; createdAt: string;
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "#F59E0B", paid: "#3B82F6", making: "#8B5CF6",
+  shipped: "#10B981", delivered: "#6B7280",
+};
+
+const STATUSES = ["paid", "making", "shipped", "delivered"];
+
+export default function AdminPage() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [loginErr, setLoginErr] = useState("");
+  const [tab, setTab] = useState<"orders" | "products" | "messages">("orders");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<string | null>(null); // null = closed, "new" = new, id = editing
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+
+  const login = async () => {
+    setLoginErr("");
+    const res = await fetch("/api/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: pass }),
+    });
+    if (res.ok) { setLoggedIn(true); loadAll(); }
+    else setLoginErr("Invalid email or password");
+  };
+
+  const loadAll = async () => {
+    setLoading(true);
+    const [oR, pR, mR] = await Promise.all([
+      fetch("/api/admin/orders"),
+      fetch("/api/admin/products"),
+      fetch("/api/admin/messages"),
+    ]);
+    if (oR.ok) setOrders(await oR.json());
+    if (pR.ok) setProducts(await pR.json());
+    if (mR.ok) setMessages(await mR.json());
+    setLoading(false);
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    await fetch("/api/admin/orders", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+    loadAll();
+  };
+
+  const markRead = async (id: string) => {
+    await fetch("/api/admin/messages", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, read: true }) });
+    loadAll();
+  };
+
+  const deleteProduct = async (id: string) => {
+    if (!confirm("Delete this product?")) return;
+    await fetch("/api/admin/products?id=" + id, { method: "DELETE" });
+    loadAll();
+  };
+
+  useEffect(() => {
+    fetch("/api/admin/orders").then((r) => { if (r.ok) { setLoggedIn(true); loadAll(); } });
+  }, []);
+
+  const unreadCount = messages.filter((m) => !m.read).length;
+  const paidOrders = orders.filter((o) => o.status === "paid").length;
+
+  // ── LOGIN ──
+  if (!loggedIn) {
+    return (
+      <div style={{ fontFamily: "'Outfit', sans-serif", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FAF6F0" }}>
+        <div style={{ width: 360, padding: 40, background: "white", border: "1px solid rgba(0,0,0,0.06)" }}>
+          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400, marginBottom: 8 }}>Nankilly</h1>
+          <p style={{ fontSize: 13, color: "#7A7670", marginBottom: 28, fontWeight: 300 }}>Admin login</p>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 6 }}>Email</label>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: "12px 14px", border: "1px solid rgba(0,0,0,0.1)", fontSize: 14, background: "white" }} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 6 }}>Password</label>
+            <input value={pass} onChange={(e) => setPass(e.target.value)} type="password" onKeyDown={(e) => e.key === "Enter" && login()} style={{ width: "100%", padding: "12px 14px", border: "1px solid rgba(0,0,0,0.1)", fontSize: 14, background: "white" }} />
+          </div>
+          {loginErr && <p style={{ fontSize: 12, color: "#C97B7B", marginBottom: 12 }}>{loginErr}</p>}
+          <button onClick={login} style={{ width: "100%", padding: 14, background: "#1E1E1C", color: "white", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}>Sign In</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PRODUCT EDITOR OVERLAY ──
+  if (editingProduct !== null) {
+    return (
+      <div style={{ fontFamily: "'Outfit', sans-serif", minHeight: "100vh", background: "#FAF6F0", padding: "32px 24px" }}>
+        <ProductEditor
+          productId={editingProduct === "new" ? undefined : editingProduct}
+          onDone={() => { setEditingProduct(null); loadAll(); }}
+        />
+      </div>
+    );
+  }
+
+  // ── DASHBOARD ──
+  return (
+    <div style={{ fontFamily: "'Outfit', sans-serif", minHeight: "100vh", background: "#FAF6F0" }}>
+      {/* Nav */}
+      <div style={{ background: "#1C3A52", padding: "0 32px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 500, color: "white" }}>Nankilly</span>
+          <span style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 300 }}>Admin</span>
+        </div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {(["orders", "products", "messages"] as const).map((t) => (
+            <button key={t} onClick={() => setTab(t)} style={{
+              padding: "8px 20px", background: tab === t ? "rgba(255,255,255,0.1)" : "transparent",
+              border: "none", color: tab === t ? "white" : "rgba(255,255,255,0.5)",
+              cursor: "pointer", fontSize: 11, fontWeight: tab === t ? 500 : 400,
+              letterSpacing: "0.06em", textTransform: "uppercase",
+              position: "relative",
+            }}>
+              {t}
+              {t === "orders" && paidOrders > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: "#3B82F6" }} />}
+              {t === "messages" && unreadCount > 0 && <span style={{ position: "absolute", top: 4, right: 4, width: 8, height: 8, borderRadius: "50%", background: "#E0A4A0" }} />}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+        {loading && <p style={{ fontSize: 13, color: "#7A7670" }}>Loading...</p>}
+
+        {/* ── ORDERS ── */}
+        {tab === "orders" && (
+          <div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400, marginBottom: 24 }}>
+              Orders ({orders.length})
+            </h2>
+            {orders.length === 0 ? (
+              <p style={{ fontSize: 14, color: "#7A7670", fontWeight: 300 }}>No orders yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {orders.map((o) => (
+                  <div key={o.id} style={{ background: "white", border: "1px solid rgba(0,0,0,0.04)", padding: 24 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", cursor: "pointer" }} onClick={() => setExpandedOrder(expandedOrder === o.id ? null : o.id)}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                          <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 500 }}>{o.orderNumber}</span>
+                          <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", padding: "3px 10px", fontWeight: 600, background: (STATUS_COLORS[o.status] || "#6B7280") + "18", color: STATUS_COLORS[o.status] || "#6B7280" }}>{o.status}</span>
+                        </div>
+                        <div style={{ fontSize: 13, color: "#7A7670", fontWeight: 300 }}>{o.customerName} - {o.customerEmail}</div>
+                        <div style={{ fontSize: 11, color: "#B5AFA8", fontWeight: 300, marginTop: 4 }}>
+                          {new Date(o.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 18, fontWeight: 600, color: "#3A6F8F" }}>
+                        {"£" + (o.total / 100).toFixed(2)}
+                      </div>
+                    </div>
+
+                    {expandedOrder === o.id && (
+                      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.04)" }}>
+                        {/* Address */}
+                        <div style={{ fontSize: 12, color: "#7A7670", fontWeight: 300, marginBottom: 12, lineHeight: 1.6 }}>
+                          {o.addressLine1}, {o.city}, {o.postcode}
+                        </div>
+
+                        {/* Items */}
+                        {o.items.map((item, i) => (
+                          <div key={i} style={{ fontSize: 13, color: "#4A4845", padding: "6px 0", borderBottom: i < o.items.length - 1 ? "1px solid rgba(0,0,0,0.02)" : "none" }}>
+                            <span style={{ fontWeight: 400 }}>{item.quantity}x {item.productName}</span>
+                            {(item.sizeName || item.fabricName) && (
+                              <span style={{ color: "#7A7670", fontWeight: 300 }}>{" / " + [item.sizeName, item.fabricName].filter(Boolean).join(" / ")}</span>
+                            )}
+                            {item.personalisation && <div style={{ color: "#3A6F8F", fontStyle: "italic", fontSize: 12, marginTop: 2 }}>{'"' + item.personalisation + '"'}</div>}
+                          </div>
+                        ))}
+
+                        {/* Status actions */}
+                        <div style={{ display: "flex", gap: 6, marginTop: 16 }}>
+                          {STATUSES.map((s) => (
+                            <button key={s} onClick={() => updateStatus(o.id, s)} disabled={o.status === s} style={{
+                              padding: "7px 16px", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+                              border: "1px solid " + (o.status === s ? "transparent" : "rgba(0,0,0,0.08)"),
+                              background: o.status === s ? (STATUS_COLORS[s] || "#6B7280") : "transparent",
+                              color: o.status === s ? "white" : "#7A7670",
+                              cursor: o.status === s ? "default" : "pointer", fontWeight: o.status === s ? 600 : 400,
+                            }}>{s}</button>
+                          ))}
+                        </div>
+                        {o.status === "paid" && (
+                          <p style={{ fontSize: 11, color: "#7A7670", fontWeight: 300, marginTop: 10, fontStyle: "italic" }}>
+                            Marking as "shipped" will automatically email the customer.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── PRODUCTS ── */}
+        {tab === "products" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400 }}>Products ({products.length})</h2>
+              <button onClick={() => setEditingProduct("new")} style={{ padding: "10px 24px", background: "#1E1E1C", color: "white", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                + Add Product
+              </button>
+            </div>
+            {products.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <p style={{ fontSize: 14, color: "#7A7670", fontWeight: 300, marginBottom: 16 }}>No products yet.</p>
+                <button onClick={() => setEditingProduct("new")} style={{ padding: "12px 28px", background: "#1E1E1C", color: "white", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  Add Your First Product
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+                {products.map((p) => (
+                  <div key={p.id} style={{ background: "white", border: "1px solid rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                    <div style={{ height: 150, background: "#D6E8F0", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                      {p.images[0] ? (
+                        <img src={p.images[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <span style={{ fontSize: 11, color: "#7A7670", textTransform: "uppercase" }}>No image</span>
+                      )}
+                    </div>
+                    <div style={{ padding: 18 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 400, marginBottom: 2 }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: "#7A7670", fontWeight: 300 }}>{p.category.name}</div>
+                        </div>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: "#3A6F8F" }}>{"£" + (p.price / 100).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => setEditingProduct(p.id)} style={{ flex: 1, padding: "8px", border: "1px solid rgba(0,0,0,0.08)", background: "none", cursor: "pointer", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A7670" }}>Edit</button>
+                        <button onClick={() => deleteProduct(p.id)} style={{ padding: "8px 12px", border: "1px solid rgba(0,0,0,0.08)", background: "none", cursor: "pointer", fontSize: 10, color: "#C97B7B" }}>x</button>
+                        <span style={{ padding: "8px 10px", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, background: p.active ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: p.active ? "#10B981" : "#EF4444", display: "flex", alignItems: "center" }}>
+                          {p.active ? "Live" : "Draft"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MESSAGES ── */}
+        {tab === "messages" && (
+          <div>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400, marginBottom: 24 }}>
+              Messages ({messages.length})
+              {unreadCount > 0 && <span style={{ fontSize: 13, fontWeight: 300, color: "#E0A4A0", marginLeft: 8 }}>{unreadCount} unread</span>}
+            </h2>
+            {messages.length === 0 ? (
+              <p style={{ fontSize: 14, color: "#7A7670", fontWeight: 300 }}>No messages yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {messages.map((m) => (
+                  <div key={m.id} style={{
+                    background: "white", border: "1px solid rgba(0,0,0,0.04)",
+                    padding: 22, borderLeft: m.read ? "none" : "3px solid #E0A4A0",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: m.read ? 400 : 600 }}>{m.name}</span>
+                          <span style={{ fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A7670", fontWeight: 300 }}>{m.subject}</span>
+                          {!m.read && <span style={{ fontSize: 8, padding: "2px 6px", background: "#E0A4A0", color: "white", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>New</span>}
+                        </div>
+                        <a href={"mailto:" + m.email} style={{ fontSize: 12, color: "#3A6F8F" }}>{m.email}</a>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#B5AFA8", fontWeight: 300 }}>
+                        {new Date(m.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 13, lineHeight: 1.7, color: "#4A4845", fontWeight: 300 }}>{m.message}</p>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <a href={"mailto:" + m.email} style={{ padding: "6px 14px", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid rgba(0,0,0,0.08)", color: "#3A6F8F", fontWeight: 500 }}>Reply</a>
+                      {!m.read && (
+                        <button onClick={() => markRead(m.id)} style={{ padding: "6px 14px", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", border: "1px solid rgba(0,0,0,0.08)", background: "none", cursor: "pointer", color: "#7A7670" }}>Mark read</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

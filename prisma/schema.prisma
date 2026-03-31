@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Admin user for Emily ──
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+// ── Product categories ──
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  sortOrder Int      @default(0)
+  products Product[]
+}
+
+// ── Fabric options ──
+model Fabric {
+  id      String  @id @default(cuid())
+  name    String
+  hex     String
+  pattern String  @default("solid") // floral, stripe, block, solid
+  story   String?
+  active  Boolean @default(true)
+  sortOrder Int   @default(0)
+}
+
+// ── Products ──
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  subtitle    String?
+  slug        String   @unique
+  description String?
+  price       Int      // stored in pence
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  
+  // Feature flags
+  hasPersonalisation Boolean @default(false)
+  personalisationPrice Int   @default(500) // pence
+  personalisationNote  String?
+  personalisationMaxChars Int @default(25)
+  
+  hasFabricChoice Boolean @default(false)
+  fabricNote      String?
+  
+  hasSizeOptions Boolean @default(false)
+  
+  // Product details
+  details   Json?    // array of {label, value} pairs
+  badge     String?  // "New", "Bespoke", "Limited" etc
+  active    Boolean  @default(true)
+  featured  Boolean  @default(false)
+  inStock   Boolean  @default(false) // false = made to order
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  images     ProductImage[]
+  sizeOptions SizeOption[]
+  orderItems  OrderItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+}
+
+model SizeOption {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String  // "Standard", "Large", "Lumbar"
+  dimensions String // "45x45cm"
+  priceAdd  Int     @default(0) // additional pence
+  sortOrder Int     @default(0)
+}
+
+// ── Orders ──
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        String      @default("pending") // pending, paid, making, shipped, delivered
+  
+  // Customer info
+  customerName  String
+  customerEmail String
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  postcode      String
+  country       String      @default("GB")
+  
+  // Pricing (all in pence)
+  subtotal      Int
+  deliveryFee   Int
+  total         Int
+  
+  // Square
+  squarePaymentId   String?
+  squareOrderId     String?
+  squareCheckoutUrl String?
+  
+  // Notes
+  customerNote  String?
+  adminNote     String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  paidAt        DateTime?
+  shippedAt     DateTime?
+  
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product @relation(fields: [productId], references: [id])
+  
+  productName     String  // snapshot at time of order
+  quantity        Int
+  unitPrice       Int     // pence
+  
+  // Options selected
+  sizeName        String?
+  fabricName      String?
+  personalisation String?
+  
+  createdAt       DateTime @default(now())
+}
+
+// ── Contact form submissions ──
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String   @default("general")
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
