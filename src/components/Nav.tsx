@@ -10,6 +10,7 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logos, setLogos] = useState<{ logo_dark: string | null; logo_light: string | null }>({ logo_dark: null, logo_light: null });
   const pathname = usePathname();
   const count = useCart((s) => s.count());
   const isHome = pathname === "/";
@@ -17,6 +18,7 @@ export default function Nav() {
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", h);
+    fetch("/api/logos").then(r => r.json()).then(setLogos).catch(() => {});
     return () => window.removeEventListener("scroll", h);
   }, []);
 
@@ -50,17 +52,21 @@ export default function Nav() {
           transition: "all 0.5s",
         }}
       >
-        <Link
-          href="/"
-          style={{
-            fontFamily: "var(--font-serif)",
-            fontSize: 22,
-            fontWeight: 500,
-            color: transparent ? "var(--white)" : "var(--ink)",
-            transition: "color 0.4s",
-          }}
-        >
-          Nankilly
+        <Link href="/" style={{ display: "flex", alignItems: "center" }}>
+          {(transparent ? logos.logo_light : logos.logo_dark) ? (
+            <img
+              src={(transparent ? logos.logo_light : logos.logo_dark)!}
+              alt="Nankilly"
+              style={{ height: 32, width: "auto", transition: "opacity 0.4s" }}
+            />
+          ) : (
+            <span style={{
+              fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 500,
+              color: transparent ? "var(--white)" : "var(--ink)", transition: "color 0.4s",
+            }}>
+              Nankilly
+            </span>
+          )}
         </Link>
 
         {/* Desktop links */}
@@ -70,7 +76,7 @@ export default function Nav() {
               key={l.href}
               href={l.href}
               style={{
-                fontSize: 11,
+                fontSize: 14,
                 fontWeight: pathname === l.href ? 500 : 400,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase" as const,

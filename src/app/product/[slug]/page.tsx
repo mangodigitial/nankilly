@@ -76,7 +76,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             images: product.images.map(i => ({ url: i.url, alt: i.alt })),
             sizeOptions: product.sizeOptions.map(s => ({ label: s.label, dimensions: s.dimensions, priceAdd: s.priceAdd })),
           }}
-          fabrics={fabrics.map(f => ({ id: f.id, name: f.name, hex: f.hex, pattern: f.pattern, story: f.story }))}
+          fabrics={fabrics.map(f => ({ id: f.id, name: f.name, hex: f.hex, pattern: f.pattern, story: f.story, imageUrl: f.imageUrl }))}
         />
       </section>
 

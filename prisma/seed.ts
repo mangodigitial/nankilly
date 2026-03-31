@@ -161,6 +161,8 @@ async function main() {
     { key: "bespoke_1", label: "Homepage - Bespoke Left" },
     { key: "bespoke_2", label: "Homepage - Bespoke Right" },
     { key: "about_hero", label: "About Page Hero" },
+    { key: "logo_dark", label: "Logo (Dark - for light backgrounds)" },
+    { key: "logo_light", label: "Logo (Light - for dark backgrounds)" },
   ];
 
   for (const si of siteImages) {

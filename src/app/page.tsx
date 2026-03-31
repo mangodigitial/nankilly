@@ -77,7 +77,9 @@ export default async function HomePage() {
         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", maxWidth: 920, margin: "0 auto" }}>
           {categories.filter(c => c._count.products > 0).map((cat) => (
             <Link key={cat.id} href={"/shop/" + cat.slug} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 24px 12px 12px", background: "var(--cream)", border: "1px solid transparent", cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, background: "var(--cornflower)", flexShrink: 0 }} />
+              <div style={{ width: 40, height: 40, background: "var(--cornflower)", flexShrink: 0, overflow: "hidden", position: "relative" }}>
+                {cat.imageUrl && <Image src={cat.imageUrl} alt={cat.name} fill style={{ objectFit: "cover" }} sizes="40px" />}
+              </div>
               <div>
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, fontWeight: 400 }}>{cat.name}</div>
                 <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 300 }}>

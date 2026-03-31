@@ -1,11 +1,18 @@
+import { prisma } from "@/lib/db";
 import Link from "next/link";
 
-export default function Footer() {
+export default async function Footer() {
+  const logoImage = await prisma.siteImage.findUnique({ where: { key: "logo_light" } });
+
   return (
     <footer style={{ background: "var(--navy)", color: "white", padding: "clamp(36px,4vw,56px) clamp(16px,3vw,40px) 24px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32, paddingBottom: 32, borderBottom: "1px solid rgba(255,255,255,0.06)", maxWidth: 1300, margin: "0 auto" }}>
         <div>
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: 20, fontWeight: 400, marginBottom: 10 }}>Nankilly</div>
+          {logoImage?.url ? (
+            <img src={logoImage.url} alt="Nankilly" style={{ height: 36, width: "auto", marginBottom: 10 }} />
+          ) : (
+            <div style={{ fontFamily: "var(--font-serif)", fontSize: 20, fontWeight: 400, marginBottom: 10 }}>Nankilly</div>
+          )}
           <p style={{ fontSize: 12, lineHeight: 1.6, color: "rgba(255,255,255,0.35)", fontWeight: 300, maxWidth: 240 }}>
             Handcrafted gifts inspired by Cornwall. Made at Nankilly Farm.
           </p>
@@ -41,13 +48,9 @@ export default function Footer() {
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 16, maxWidth: 1300, margin: "0 auto" }}>
         <span style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", fontWeight: 300 }}>2026 Nankilly</span>
-        <div style={{ display: "flex", gap: 10 }}>
-          {["IG", "FB"].map((s) => (
-            <a key={s} href="#" style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>
-              {s}
-            </a>
-          ))}
-        </div>
+        <a href="https://www.instagram.com/nankilly" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)", fontSize: 10 }}>
+          IG
+        </a>
       </div>
     </footer>
   );

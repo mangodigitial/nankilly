@@ -25,6 +25,16 @@ type SiteImage = {
   id: string; key: string; label: string; url: string | null; alt: string | null;
 };
 
+type Fabric = {
+  id: string; name: string; hex: string; pattern: string; story: string | null;
+  imageUrl: string | null; active: boolean; sortOrder: number;
+};
+
+type Category = {
+  id: string; name: string; slug: string; imageUrl: string | null;
+  _count: { products: number };
+};
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "#F59E0B", paid: "#3B82F6", making: "#8B5CF6",
   shipped: "#10B981", delivered: "#6B7280",
@@ -37,12 +47,18 @@ export default function AdminPage() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [loginErr, setLoginErr] = useState("");
-  const [tab, setTab] = useState<"orders" | "products" | "messages" | "images">("orders");
+  const [tab, setTab] = useState<"orders" | "products" | "messages" | "images" | "fabrics">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [siteImages, setSiteImages] = useState<SiteImage[]>([]);
   const [uploadingSiteImage, setUploadingSiteImage] = useState<string | null>(null);
+  const [allFabrics, setAllFabrics] = useState<Fabric[]>([]);
+  const [editingFabric, setEditingFabric] = useState<Fabric | null>(null);
+  const [fabricForm, setFabricForm] = useState({ name: "", hex: "#6B9FCC", pattern: "solid", story: "", imageUrl: "" });
+  const [uploadingFabricImg, setUploadingFabricImg] = useState(false);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [uploadingCatImg, setUploadingCatImg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState<string | null>(null); // null = closed, "new" = new, id = editing
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -60,16 +76,20 @@ export default function AdminPage() {
 
   const loadAll = async () => {
     setLoading(true);
-    const [oR, pR, mR, siR] = await Promise.all([
+    const [oR, pR, mR, siR, fR, cR] = await Promise.all([
       fetch("/api/admin/orders"),
       fetch("/api/admin/products"),
       fetch("/api/admin/messages"),
       fetch("/api/admin/site-images"),
+      fetch("/api/admin/fabrics"),
+      fetch("/api/admin/categories"),
     ]);
     if (oR.ok) setOrders(await oR.json());
     if (pR.ok) setProducts(await pR.json());
     if (mR.ok) setMessages(await mR.json());
     if (siR.ok) setSiteImages(await siR.json());
+    if (fR.ok) setAllFabrics(await fR.json());
+    if (cR.ok) setAllCategories(await cR.json());
     setLoading(false);
   };
 
@@ -165,7 +185,7 @@ export default function AdminPage() {
           <span style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", fontWeight: 300 }}>Admin</span>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
-          {(["orders", "products", "messages", "images"] as const).map((t) => (
+          {(["orders", "products", "fabrics", "messages", "images"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: "8px 20px", background: tab === t ? "rgba(255,255,255,0.1)" : "transparent",
               border: "none", color: tab === t ? "white" : "rgba(255,255,255,0.5)",
@@ -306,6 +326,99 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* ── FABRICS ── */}
+        {tab === "fabrics" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400 }}>Fabrics ({allFabrics.length})</h2>
+              <button onClick={() => { setEditingFabric(null); setFabricForm({ name: "", hex: "#6B9FCC", pattern: "solid", story: "", imageUrl: "" }); }} style={{ padding: "10px 24px", background: "#1E1E1C", color: "white", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                + Add Fabric
+              </button>
+            </div>
+
+            {/* Fabric form */}
+            <div style={{ background: "white", border: "1px solid rgba(0,0,0,0.04)", padding: 24, marginBottom: 24 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 16 }}>{editingFabric ? "Edit: " + editingFabric.name : "Add New Fabric"}</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div>
+                  <label style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 4 }}>Name</label>
+                  <input value={fabricForm.name} onChange={(e) => setFabricForm({ ...fabricForm, name: e.target.value })} placeholder="Liberty Betsy" style={{ width: "100%", padding: "10px 12px", border: "1px solid rgba(0,0,0,0.1)", fontSize: 13 }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 4 }}>Colour (hex)</label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input type="color" value={fabricForm.hex} onChange={(e) => setFabricForm({ ...fabricForm, hex: e.target.value })} style={{ width: 40, height: 38, border: "1px solid rgba(0,0,0,0.1)", padding: 2, cursor: "pointer" }} />
+                    <input value={fabricForm.hex} onChange={(e) => setFabricForm({ ...fabricForm, hex: e.target.value })} style={{ flex: 1, padding: "10px 12px", border: "1px solid rgba(0,0,0,0.1)", fontSize: 13 }} />
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 4 }}>Description</label>
+                <input value={fabricForm.story} onChange={(e) => setFabricForm({ ...fabricForm, story: e.target.value })} placeholder="Timeless Liberty floral. Soft pinks and dusky roses." style={{ width: "100%", padding: "10px 12px", border: "1px solid rgba(0,0,0,0.1)", fontSize: 13 }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500, display: "block", marginBottom: 4 }}>Fabric Image</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {fabricForm.imageUrl && <img src={fabricForm.imageUrl} alt="" style={{ width: 60, height: 60, objectFit: "cover" }} />}
+                  <label style={{ padding: "8px 16px", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A7670" }}>
+                    {uploadingFabricImg ? "Uploading..." : fabricForm.imageUrl ? "Replace Image" : "Upload Image"}
+                    <input type="file" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingFabricImg(true);
+                      const form = new FormData();
+                      form.append("file", file);
+                      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+                      if (res.ok) { const { url } = await res.json(); setFabricForm((f) => ({ ...f, imageUrl: url })); }
+                      setUploadingFabricImg(false);
+                    }} style={{ display: "none" }} />
+                  </label>
+                  {fabricForm.imageUrl && <button onClick={() => setFabricForm({ ...fabricForm, imageUrl: "" })} style={{ fontSize: 10, color: "#C97B7B", background: "none", border: "none", cursor: "pointer" }}>Remove</button>}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={async () => {
+                  const payload = { ...fabricForm, story: fabricForm.story || null, imageUrl: fabricForm.imageUrl || null };
+                  if (editingFabric) {
+                    await fetch("/api/admin/fabrics", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: editingFabric.id, ...payload }) });
+                  } else {
+                    await fetch("/api/admin/fabrics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                  }
+                  setEditingFabric(null);
+                  setFabricForm({ name: "", hex: "#6B9FCC", pattern: "solid", story: "", imageUrl: "" });
+                  loadAll();
+                }} style={{ padding: "10px 24px", background: "#1E1E1C", color: "white", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {editingFabric ? "Update" : "Add"} Fabric
+                </button>
+                {editingFabric && <button onClick={() => { setEditingFabric(null); setFabricForm({ name: "", hex: "#6B9FCC", pattern: "solid", story: "", imageUrl: "" }); }} style={{ padding: "10px 24px", background: "none", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer", fontSize: 11, color: "#7A7670" }}>Cancel</button>}
+              </div>
+            </div>
+
+            {/* Fabric list */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
+              {allFabrics.map((f) => (
+                <div key={f.id} style={{ background: "white", border: "1px solid rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                  <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
+                    {f.imageUrl ? (
+                      <img src={f.imageUrl} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", background: f.hex }} />
+                    )}
+                  </div>
+                  <div style={{ padding: 14 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{f.name}</div>
+                    {f.story && <div style={{ fontSize: 11, color: "#7A7670", fontWeight: 300, lineHeight: 1.4, marginBottom: 8 }}>{f.story}</div>}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button onClick={() => { setEditingFabric(f); setFabricForm({ name: f.name, hex: f.hex, pattern: f.pattern, story: f.story || "", imageUrl: f.imageUrl || "" }); }} style={{ flex: 1, padding: "6px", border: "1px solid rgba(0,0,0,0.08)", background: "none", cursor: "pointer", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A7670" }}>Edit</button>
+                      <button onClick={async () => { if (!confirm("Delete " + f.name + "?")) return; await fetch("/api/admin/fabrics?id=" + f.id, { method: "DELETE" }); loadAll(); }} style={{ padding: "6px 10px", border: "1px solid rgba(0,0,0,0.08)", background: "none", cursor: "pointer", fontSize: 10, color: "#C97B7B" }}>x</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── SITE IMAGES ── */}
         {tab === "images" && (
           <div>
@@ -338,6 +451,47 @@ export default function AdminPage() {
             {siteImages.length === 0 && !loading && (
               <p style={{ fontSize: 14, color: "#7A7670", fontWeight: 300 }}>No image slots found. Run database seed to create them.</p>
             )}
+
+            {/* Category images */}
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 400, marginTop: 40, marginBottom: 8 }}>Category Images</h2>
+            <p style={{ fontSize: 13, color: "#7A7670", fontWeight: 300, marginBottom: 20 }}>Shown on the homepage "Shop by category" section.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+              {allCategories.map((cat) => (
+                <div key={cat.id} style={{ background: "white", border: "1px solid rgba(0,0,0,0.04)", overflow: "hidden" }}>
+                  <div style={{ height: 120, background: "#D6E8F0", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
+                    {cat.imageUrl ? (
+                      <>
+                        <img src={cat.imageUrl} alt={cat.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button onClick={async () => { await fetch("/api/admin/categories", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: cat.id, imageUrl: null }) }); loadAll(); }} style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "white", border: "none", cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>x</button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 11, color: "#7A7670", textTransform: "uppercase" }}>No image</span>
+                    )}
+                  </div>
+                  <div style={{ padding: 12 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{cat.name}</div>
+                    <div style={{ fontSize: 11, color: "#B5AFA8", marginBottom: 10 }}>{cat._count.products} products</div>
+                    <label style={{ display: "inline-block", padding: "6px 14px", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "#7A7670" }}>
+                      {uploadingCatImg === cat.id ? "Uploading..." : cat.imageUrl ? "Replace" : "Upload"}
+                      <input type="file" accept="image/*" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingCatImg(cat.id);
+                        const form = new FormData();
+                        form.append("file", file);
+                        const upRes = await fetch("/api/admin/upload", { method: "POST", body: form });
+                        if (upRes.ok) {
+                          const { url } = await upRes.json();
+                          await fetch("/api/admin/categories", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: cat.id, imageUrl: url }) });
+                        }
+                        setUploadingCatImg(null);
+                        loadAll();
+                      }} style={{ display: "none" }} />
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

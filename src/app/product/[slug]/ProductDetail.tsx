@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useCart } from "@/lib/cart";
 
@@ -26,7 +26,7 @@ interface ProductProps {
     images: { url: string; alt: string | null }[];
     sizeOptions: { label: string; dimensions: string; priceAdd: number }[];
   };
-  fabrics: { id: string; name: string; hex: string; pattern: string; story: string | null }[];
+  fabrics: { id: string; name: string; hex: string; pattern: string; story: string | null; imageUrl: string | null }[];
 }
 
 const catColors: Record<string, string> = {
@@ -43,12 +43,28 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [tab, setTab] = useState("story");
+  const [zoomed, setZoomed] = useState(false);
+  const [fabricOpen, setFabricOpen] = useState(false);
+  const fabricRef = useRef<HTMLDivElement>(null);
+  const touchStart = useRef<number | null>(null);
 
   const addItem = useCart((s) => s.addItem);
+
+  const imgCount = product.images.length;
+  const prevImg = useCallback(() => setActiveImg((i) => (i - 1 + imgCount) % imgCount), [imgCount]);
+  const nextImg = useCallback(() => setActiveImg((i) => (i + 1) % imgCount), [imgCount]);
+  const onTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart.current === null) return;
+    const diff = e.changedTouches[0].clientX - touchStart.current;
+    if (Math.abs(diff) > 40) { diff > 0 ? prevImg() : nextImg(); }
+    touchStart.current = null;
+  };
 
   const unitPrice = product.price + (size?.priceAdd || 0) + (persOn && persText ? product.personalisationPrice : 0);
   const total = unitPrice * qty;
   const accentColor = catColors[product.category] || "#F0E6D8";
+  const isBunting = product.category === "Bunting";
 
   const handleAdd = () => {
     addItem({
@@ -72,11 +88,16 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
       <div style={{ display: "grid", gridTemplateColumns: "55% 1fr", gap: "clamp(24px,3vw,56px)" }}>
         {/* GALLERY */}
         <div style={{ position: "sticky", top: 72, alignSelf: "flex-start" }}>
-          <div style={{
-            aspectRatio: "4/5", position: "relative", overflow: "hidden",
-            background: "linear-gradient(145deg, var(--sky-pale), var(--linen), var(--sand))",
-            marginBottom: 12,
-          }}>
+          <div
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            style={{
+              aspectRatio: "4/5", position: "relative", overflow: "hidden",
+              background: "linear-gradient(145deg, var(--sky-pale), var(--linen), var(--sand))",
+              marginBottom: 12, cursor: product.images[activeImg] ? "zoom-in" : "default",
+            }}
+            onClick={() => product.images[activeImg] && setZoomed(true)}
+          >
             <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: 60, background: accentColor, zIndex: 2 }} />
             <div style={{ position: "absolute", top: 0, left: 0, width: 60, height: 4, background: accentColor, zIndex: 2 }} />
 
@@ -94,14 +115,32 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
               </span>
             )}
 
+            {/* Gallery arrows */}
+            {imgCount > 1 && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); prevImg(); }} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", zIndex: 4, width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); nextImg(); }} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", zIndex: 4, width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+                {/* Dot indicators */}
+                <div style={{ position: "absolute", bottom: 12, left: "50%", transform: "translateX(-50%)", zIndex: 4, display: "flex", gap: 6 }}>
+                  {product.images.map((_, i) => (
+                    <button key={i} onClick={(e) => { e.stopPropagation(); setActiveImg(i); }} style={{ width: activeImg === i ? 18 : 6, height: 6, borderRadius: 3, background: activeImg === i ? "white" : "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.3s" }} />
+                  ))}
+                </div>
+              </>
+            )}
+
             {/* Fabric swatch preview */}
             {fabric && (
-              <div style={{ position: "absolute", bottom: 20, right: 20, zIndex: 3, width: 48, height: 48, background: fabric.hex, border: "3px solid white", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", transition: "background 0.4s" }} />
+              <div style={{ position: "absolute", bottom: imgCount > 1 ? 32 : 20, right: 20, zIndex: 3, width: 48, height: 48, background: fabric.hex, border: "3px solid white", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", transition: "background 0.4s" }} />
             )}
 
             {/* Personalisation preview */}
             {persOn && persText && (
-              <div style={{ position: "absolute", bottom: 20, left: 20, right: 80, zIndex: 3, padding: "10px 16px", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)" }}>
+              <div style={{ position: "absolute", bottom: imgCount > 1 ? 32 : 20, left: 20, right: 80, zIndex: 3, padding: "10px 16px", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)" }}>
                 <div style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", marginBottom: 3 }}>Stitched text</div>
                 <div style={{ fontFamily: "var(--font-serif)", fontSize: 15, fontStyle: "italic", color: "var(--ocean)" }}>{persText}</div>
               </div>
@@ -175,31 +214,55 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
           {/* FABRIC ZONE */}
           {product.hasFabricChoice && fabrics.length > 0 && (
             <div style={{ background: "var(--sand)", margin: "0 -clamp(16px,3vw,40px)", padding: "28px clamp(16px,3vw,40px)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const, fontWeight: 500 }}>Backing Fabric</span>
-                <span style={{ fontSize: 12, color: "var(--ocean)" }}>{fabric?.name}</span>
-              </div>
-              {product.fabricNote && <p style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 300, marginBottom: 16, lineHeight: 1.5 }}>{product.fabricNote}</p>}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                {fabrics.map(f => (
-                  <button key={f.id} onClick={() => setFabric(f)} style={{
-                    padding: 0, border: "none", cursor: "pointer", background: "var(--white)", textAlign: "left" as const,
-                    outline: fabric?.id === f.id ? "2.5px solid var(--ocean)" : "2.5px solid transparent",
-                    transition: "all 0.3s", overflow: "hidden",
+              <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const, fontWeight: 500, marginBottom: 6 }}>Backing Fabric</div>
+              {product.fabricNote && <p style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 300, marginBottom: 14, lineHeight: 1.5 }}>{product.fabricNote}</p>}
+
+              {/* Custom fabric dropdown */}
+              <div ref={fabricRef} style={{ position: "relative" }}>
+                <button onClick={() => setFabricOpen(!fabricOpen)} style={{
+                  width: "100%", padding: "10px 14px", background: "var(--white)", border: "1.5px solid " + (fabricOpen ? "var(--ocean)" : "rgba(0,0,0,0.1)"),
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" as const, transition: "border-color 0.2s",
+                }}>
+                  {fabric?.imageUrl ? (
+                    <img src={fabric.imageUrl} alt={fabric.name} style={{ width: 44, height: 44, objectFit: "cover", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 44, height: 44, background: fabric?.hex || "#ccc", flexShrink: 0 }} />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{fabric?.name || "Select a fabric"}</div>
+                    {fabric?.story && <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 300, lineHeight: 1.3, marginTop: 2 }}>{fabric.story}</div>}
+                  </div>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, transform: fabricOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}><path d="M2 4l4 4 4-4" stroke="var(--ink-soft)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+
+                {fabricOpen && (
+                  <div style={{
+                    position: "absolute", top: "100%", left: 0, right: 0, zIndex: 20, background: "var(--white)",
+                    border: "1.5px solid var(--ocean)", borderTop: "none", maxHeight: 320, overflowY: "auto",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
                   }}>
-                    <div style={{ height: 56, background: f.hex, position: "relative" }}>
-                      {fabric?.id === f.id && (
-                        <div style={{ position: "absolute", top: 6, right: 6, width: 20, height: 20, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="var(--ocean)" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    {fabrics.map(f => (
+                      <button key={f.id} onClick={() => { setFabric(f); setFabricOpen(false); }} style={{
+                        width: "100%", padding: "10px 14px", border: "none", borderBottom: "1px solid rgba(0,0,0,0.04)",
+                        cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" as const,
+                        background: fabric?.id === f.id ? "rgba(58,111,143,0.06)" : "transparent",
+                      }}>
+                        {f.imageUrl ? (
+                          <img src={f.imageUrl} alt={f.name} style={{ width: 44, height: 44, objectFit: "cover", flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 44, height: 44, background: f.hex, flexShrink: 0 }} />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: fabric?.id === f.id ? 500 : 400 }}>{f.name}</div>
+                          {f.story && <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 300, lineHeight: 1.3, marginTop: 2 }}>{f.story}</div>}
                         </div>
-                      )}
-                    </div>
-                    <div style={{ padding: "10px 12px" }}>
-                      <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 2 }}>{f.name}</div>
-                      {f.story && <div style={{ fontSize: 10, color: "var(--ink-soft)", fontWeight: 300, lineHeight: 1.4 }}>{f.story}</div>}
-                    </div>
-                  </button>
-                ))}
+                        {fabric?.id === f.id && (
+                          <svg width="14" height="10" viewBox="0 0 10 8" fill="none" style={{ flexShrink: 0 }}><path d="M1 4l2.5 2.5L9 1" stroke="var(--ocean)" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -268,20 +331,26 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
           <div style={{ paddingTop: 28 }}>
             {product.hasSizeOptions && product.sizeOptions.length > 0 && (
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 10, fontWeight: 500 }}>Size</div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {product.sizeOptions.map(s => (
-                    <button key={s.label} onClick={() => setSize(s)} style={{
-                      flex: 1, padding: "12px 10px",
-                      border: "1.5px solid " + (size?.label === s.label ? "var(--ocean)" : "rgba(0,0,0,0.08)"),
-                      background: size?.label === s.label ? "rgba(58,111,143,0.04)" : "transparent",
-                      cursor: "pointer", textAlign: "center" as const, transition: "all 0.3s",
-                    }}>
-                      <div style={{ fontSize: 13, fontWeight: size?.label === s.label ? 500 : 400 }}>{s.label}</div>
-                      <div style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 300, marginTop: 2 }}>{s.dimensions}</div>
-                      {s.priceAdd > 0 && <div style={{ fontSize: 10, color: "var(--ocean)", marginTop: 3 }}>{"+ £" + (s.priceAdd / 100).toFixed(2)}</div>}
-                    </button>
-                  ))}
+                <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 10, fontWeight: 500 }}>
+                  {isBunting ? "Number of Letters" : "Size"}
+                </div>
+                <div style={{ position: "relative" }}>
+                  <select
+                    value={size?.label || ""}
+                    onChange={(e) => { const s = product.sizeOptions.find(o => o.label === e.target.value); if (s) setSize(s); }}
+                    style={{
+                      width: "100%", padding: "14px 40px 14px 16px", fontSize: 14,
+                      border: "1.5px solid rgba(0,0,0,0.1)", background: "var(--white)",
+                      cursor: "pointer", appearance: "none", fontFamily: "inherit", color: "var(--ink)",
+                    }}
+                  >
+                    {product.sizeOptions.map(s => (
+                      <option key={s.label} value={s.label}>
+                        {s.label}{s.dimensions ? ` — ${s.dimensions}` : ""}{isBunting ? ` — £${((product.price + s.priceAdd) / 100).toFixed(2)}` : s.priceAdd > 0 ? ` (+£${(s.priceAdd / 100).toFixed(2)})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><path d="M2 4l4 4 4-4" stroke="var(--ink-soft)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>
               </div>
             )}
@@ -322,6 +391,48 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
           </div>
         </div>
       </div>
+
+      {/* Zoom lightbox */}
+      {zoomed && product.images[activeImg] && (
+        <div
+          onClick={() => setZoomed(false)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={(e) => { onTouchEnd(e); }}
+          style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}
+        >
+          <button onClick={() => setZoomed(false)} style={{ position: "absolute", top: 20, right: 20, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", color: "white", fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          </button>
+
+          {imgCount > 1 && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); prevImg(); }} style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", zIndex: 5, width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); nextImg(); }} style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 5, width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+            </>
+          )}
+
+          <div style={{ position: "relative", width: "90vw", height: "90vh", maxWidth: 1200 }} onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={product.images[activeImg].url}
+              alt={product.images[activeImg].alt || product.name}
+              fill
+              style={{ objectFit: "contain", cursor: "zoom-out" }}
+              sizes="90vw"
+              onClick={() => setZoomed(false)}
+            />
+          </div>
+
+          {imgCount > 1 && (
+            <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 8, zIndex: 5 }}>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{activeImg + 1} / {imgCount}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

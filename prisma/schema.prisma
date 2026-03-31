@@ -21,19 +21,21 @@ model Category {
   id       String    @id @default(cuid())
   name     String    @unique
   slug     String    @unique
+  imageUrl String?
   sortOrder Int      @default(0)
   products Product[]
 }
 
 // ── Fabric options ──
 model Fabric {
-  id      String  @id @default(cuid())
-  name    String
-  hex     String
-  pattern String  @default("solid") // floral, stripe, block, solid
-  story   String?
-  active  Boolean @default(true)
-  sortOrder Int   @default(0)
+  id       String  @id @default(cuid())
+  name     String
+  hex      String
+  pattern  String  @default("solid") // floral, stripe, block, solid
+  story    String?
+  imageUrl String?
+  active   Boolean @default(true)
+  sortOrder Int    @default(0)
 }
 
 // ── Products ──
