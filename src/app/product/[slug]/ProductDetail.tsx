@@ -139,8 +139,10 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
             )}
 
             {/* Fabric swatch preview */}
-            {fabric && (
-              <div style={{ position: "absolute", bottom: imgCount > 1 ? 32 : 20, right: 20, zIndex: 3, width: 48, height: 48, background: fabric.hex, border: "3px solid white", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", transition: "background 0.4s" }} />
+            {fabric && product.hasFabricChoice && (
+              <div style={{ position: "absolute", bottom: imgCount > 1 ? 32 : 20, right: 20, zIndex: 3, width: 56, height: 56, border: "3px solid white", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", overflow: "hidden", background: fabric.hex, transition: "all 0.4s" }}>
+                {fabric.imageUrl && <img src={fabric.imageUrl} alt={fabric.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+              </div>
             )}
 
             {/* Personalisation preview */}
@@ -229,9 +231,9 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
                   cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" as const, transition: "border-color 0.2s",
                 }}>
                   {fabric?.imageUrl ? (
-                    <img src={fabric.imageUrl} alt={fabric.name} style={{ width: 44, height: 44, objectFit: "cover", flexShrink: 0 }} />
+                    <img src={fabric.imageUrl} alt={fabric.name} style={{ width: 72, height: 72, objectFit: "cover", flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 44, height: 44, background: fabric?.hex || "#ccc", flexShrink: 0 }} />
+                    <div style={{ width: 72, height: 72, background: fabric?.hex || "#ccc", flexShrink: 0 }} />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 500 }}>{fabric?.name || "Select a fabric"}</div>
@@ -253,9 +255,9 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
                         background: fabric?.id === f.id ? "rgba(58,111,143,0.06)" : "transparent",
                       }}>
                         {f.imageUrl ? (
-                          <img src={f.imageUrl} alt={f.name} style={{ width: 44, height: 44, objectFit: "cover", flexShrink: 0 }} />
+                          <img src={f.imageUrl} alt={f.name} style={{ width: 72, height: 72, objectFit: "cover", flexShrink: 0 }} />
                         ) : (
-                          <div style={{ width: 44, height: 44, background: f.hex, flexShrink: 0 }} />
+                          <div style={{ width: 72, height: 72, background: f.hex, flexShrink: 0 }} />
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: fabric?.id === f.id ? 500 : 400 }}>{f.name}</div>

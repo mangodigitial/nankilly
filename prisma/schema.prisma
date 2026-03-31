@@ -28,14 +28,15 @@ model Category {
 
 // ── Fabric options ──
 model Fabric {
-  id       String  @id @default(cuid())
+  id       String    @id @default(cuid())
   name     String
   hex      String
-  pattern  String  @default("solid") // floral, stripe, block, solid
+  pattern  String    @default("solid") // floral, stripe, block, solid
   story    String?
   imageUrl String?
-  active   Boolean @default(true)
-  sortOrder Int    @default(0)
+  active   Boolean   @default(true)
+  sortOrder Int      @default(0)
+  products Product[]
 }
 
 // ── Products ──
@@ -57,6 +58,7 @@ model Product {
   
   hasFabricChoice Boolean @default(false)
   fabricNote      String?
+  fabrics         Fabric[]
   
   hasSizeOptions Boolean @default(false)
 

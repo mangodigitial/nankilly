@@ -8,7 +8,7 @@ export async function GET() {
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const products = await prisma.product.findMany({
-    include: { category: true, images: { orderBy: { sortOrder: "asc" } }, sizeOptions: { orderBy: { sortOrder: "asc" } }, dropdownOptions: { orderBy: { sortOrder: "asc" } } },
+    include: { category: true, images: { orderBy: { sortOrder: "asc" } }, sizeOptions: { orderBy: { sortOrder: "asc" } }, dropdownOptions: { orderBy: { sortOrder: "asc" } }, fabrics: { select: { id: true } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         personalisationNote: body.personalisationNote || null,
         hasFabricChoice: body.hasFabricChoice || false,
         fabricNote: body.fabricNote || null,
+        fabrics: body.fabricIds?.length ? { connect: body.fabricIds.map((id: string) => ({ id })) } : undefined,
         hasSizeOptions: body.hasSizeOptions || false,
         hasDropdown: body.hasDropdown || false,
         dropdownLabel: body.dropdownLabel || null,
@@ -83,7 +84,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, images, sizeOptions, dropdownOptions, ...data } = body;
+    const { id, images, sizeOptions, dropdownOptions, fabricIds, ...data } = body;
 
     if (!id) return NextResponse.json({ error: "Product ID required" }, { status: 400 });
 
@@ -92,6 +93,14 @@ export async function PUT(req: NextRequest) {
       where: { id },
       data,
     });
+
+    // Replace fabric assignments if provided
+    if (fabricIds !== undefined) {
+      await prisma.product.update({
+        where: { id },
+        data: { fabrics: { set: fabricIds.map((fid: string) => ({ id: fid })) } },
+      });
+    }
 
     // Replace images if provided
     if (images) {

@@ -18,9 +18,19 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   if (!product) notFound();
 
-  const fabrics = product.hasFabricChoice
-    ? await prisma.fabric.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } })
-    : [];
+  let fabrics: Awaited<ReturnType<typeof prisma.fabric.findMany>> = [];
+  if (product.hasFabricChoice) {
+    // Get fabrics assigned to this product
+    const productWithFabrics = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: { fabrics: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
+    });
+    fabrics = productWithFabrics?.fabrics || [];
+    // Fallback: if no fabrics assigned, show all active fabrics
+    if (fabrics.length === 0) {
+      fabrics = await prisma.fabric.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } });
+    }
+  }
 
   const related = await prisma.product.findMany({
     where: { active: true, id: { not: product.id }, categoryId: product.categoryId },

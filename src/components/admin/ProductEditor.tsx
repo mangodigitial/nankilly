@@ -21,6 +21,7 @@ type ProductForm = {
   personalisationMaxChars: string;
   hasFabricChoice: boolean;
   fabricNote: string;
+  fabricIds: string[];
   hasSizeOptions: boolean;
   hasDropdown: boolean;
   dropdownLabel: string;
@@ -34,7 +35,7 @@ const empty: ProductForm = {
   name: "", subtitle: "", slug: "", description: "", price: "",
   categoryId: "", badge: "", active: true, featured: false, inStock: false,
   hasPersonalisation: false, personalisationPrice: "5.00", personalisationNote: "", personalisationMaxChars: "25",
-  hasFabricChoice: false, fabricNote: "",
+  hasFabricChoice: false, fabricNote: "", fabricIds: [],
   hasSizeOptions: false,
   hasDropdown: false, dropdownLabel: "",
   images: [], sizeOptions: [], dropdownOptions: [], details: [],
@@ -43,14 +44,14 @@ const empty: ProductForm = {
 export default function ProductEditor({ productId, onDone }: { productId?: string; onDone: () => void }) {
   const [form, setForm] = useState<ProductForm>(empty);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [allFabrics, setAllFabrics] = useState<{ id: string; name: string; imageUrl: string | null; hex: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    // Load categories
-    fetch("/api/admin/products").then(async (r) => {
-      if (!r.ok) return;
-      // We need a categories endpoint, for now extract from products
+    // Load fabrics
+    fetch("/api/admin/fabrics").then(async (r) => {
+      if (r.ok) setAllFabrics(await r.json());
     });
 
     if (productId) {
@@ -71,6 +72,7 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
             personalisationMaxChars: String(p.personalisationMaxChars),
             hasFabricChoice: p.hasFabricChoice,
             fabricNote: p.fabricNote || "",
+            fabricIds: p.fabrics?.map((f: { id: string }) => f.id) || [],
             hasSizeOptions: p.hasSizeOptions,
             hasDropdown: p.hasDropdown,
             dropdownLabel: p.dropdownLabel || "",
@@ -253,8 +255,27 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
       {form.hasFabricChoice && (
         <div style={{ padding: 20, background: "#F0E6D8", marginBottom: 20 }}>
           <h4 style={{ fontSize: 12, fontWeight: 500, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>Fabric Choice Settings</h4>
-          <label style={labelStyle}>Note shown to customer</label>
-          <input value={form.fabricNote} onChange={(e) => set("fabricNote", e.target.value)} placeholder="Choose the backing fabric" style={inputStyle} />
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Note shown to customer</label>
+            <input value={form.fabricNote} onChange={(e) => set("fabricNote", e.target.value)} placeholder="Choose the backing fabric" style={inputStyle} />
+          </div>
+          <label style={labelStyle}>Available fabrics (none selected = show all)</label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6, marginTop: 6 }}>
+            {allFabrics.map((f) => (
+              <label key={f.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", background: form.fabricIds.includes(f.id) ? "rgba(58,111,143,0.08)" : "white", border: "1px solid rgba(0,0,0,0.06)", cursor: "pointer", fontSize: 12 }}>
+                <input type="checkbox" checked={form.fabricIds.includes(f.id)} onChange={(e) => {
+                  if (e.target.checked) set("fabricIds", [...form.fabricIds, f.id]);
+                  else set("fabricIds", form.fabricIds.filter((id: string) => id !== f.id));
+                }} />
+                {f.imageUrl ? (
+                  <img src={f.imageUrl} alt="" style={{ width: 24, height: 24, objectFit: "cover", flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 24, height: 24, background: f.hex, flexShrink: 0 }} />
+                )}
+                {f.name}
+              </label>
+            ))}
+          </div>
         </div>
       )}
 
