@@ -90,7 +90,7 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
 
   return (
     <div style={{ padding: "20px clamp(16px,3vw,40px) clamp(40px,5vw,80px)", maxWidth: 1300, margin: "0 auto" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "55% 1fr", gap: "clamp(24px,3vw,56px)" }}>
+      <div className="grid-product" style={{ gap: "clamp(24px,3vw,56px)" }}>
         {/* GALLERY */}
         <div style={{ position: "sticky", top: 72, alignSelf: "flex-start" }}>
           <div

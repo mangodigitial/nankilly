@@ -67,7 +67,7 @@ export default function CartPage() {
           </h1>
 
           {items.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 48 }}>
+            <div className="grid-cart" style={{ gap: 48 }}>
               {/* Left: form */}
               <div>
                 <h2 style={{ fontSize: 14, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 20 }}>Delivery details</h2>

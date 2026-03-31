@@ -14,7 +14,7 @@ export default async function AboutPage() {
     <>
       <Nav />
       <section style={{ paddingTop: 60 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "85vh" }}>
+        <div className="grid-2" style={{ minHeight: "85vh" }}>
           <div style={{ background: "linear-gradient(145deg, var(--sky-pale), var(--linen), var(--sand))", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", minHeight: 500, overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: 80, background: "var(--blush)", zIndex: 1 }} />
             <div style={{ position: "absolute", top: 0, left: 0, width: 80, height: 4, background: "var(--blush)", zIndex: 1 }} />
@@ -65,7 +65,7 @@ export default async function AboutPage() {
               {"Free motion "}<em style={{ fontStyle: "italic", color: "var(--ocean)" }}>stitch drawing</em>
             </h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
+          <div className="grid-3" style={{ gap: 2 }}>
             {[
               { title: "Hand Cut", desc: "Every piece is individually cut and composed. No patterns, no mass production.", bg: "var(--sky-pale)", col: "var(--ink)" },
               { title: "Stitch Drawn", desc: "Waves, wildflowers, surfers. Each design drawn freehand through the needle.", bg: "var(--navy)", col: "white" },
@@ -97,7 +97,7 @@ export default async function AboutPage() {
       </section>
 
       <section style={{ padding: "clamp(48px,6vw,80px) clamp(16px,3vw,40px)" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div className="grid-2" style={{ maxWidth: 900, margin: "0 auto", gap: 24 }}>
           <Link href="/shop" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "clamp(32px,4vw,56px)", background: "var(--cream)", border: "1px solid rgba(0,0,0,0.04)", textAlign: "center" }}>
             <div style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 400, marginBottom: 8 }}>Shop the Collection</div>
             <div style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 300 }}>Browse all handmade pieces</div>

@@ -6,7 +6,7 @@ export default async function Footer() {
 
   return (
     <footer style={{ background: "var(--navy)", color: "white", padding: "clamp(36px,4vw,56px) clamp(16px,3vw,40px) 24px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32, paddingBottom: 32, borderBottom: "1px solid rgba(255,255,255,0.06)", maxWidth: 1300, margin: "0 auto" }}>
+      <div className="grid-2-1" style={{ gap: 32, paddingBottom: 32, borderBottom: "1px solid rgba(255,255,255,0.06)", maxWidth: 1300, margin: "0 auto" }}>
         <div>
           {logoImage?.url ? (
             <img src={logoImage.url} alt="Nankilly" style={{ height: 36, width: "auto", marginBottom: 10 }} />

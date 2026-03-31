@@ -103,7 +103,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
               From the <em style={{ fontStyle: "italic", color: "var(--ocean)" }}>same hands</em>
             </h3>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+          <div className="grid-4-related" style={{ gap: 20 }}>
             {allRelated.map(p => (
               <ProductCard key={p.id} slug={p.slug} name={p.name} subtitle={p.subtitle} price={p.price} category={p.category.name} imageUrl={p.images[0]?.url} badge={p.badge} />
             ))}

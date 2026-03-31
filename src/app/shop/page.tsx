@@ -56,7 +56,7 @@ export default async function ShopPage() {
               <p style={{ fontSize: 15, color: "var(--ink-soft)", fontWeight: 300 }}>No products yet. Check back soon.</p>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+            <div className="grid-3" style={{ gap: 24 }}>
               {products.map((p) => (
                 <ProductCard
                   key={p.id}

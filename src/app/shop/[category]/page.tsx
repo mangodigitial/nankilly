@@ -65,7 +65,7 @@ export default async function CategoryPage({ params }: { params: { category: str
               <p style={{ fontSize: 15, color: "var(--ink-soft)", fontWeight: 300 }}>No products in this category yet.</p>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+            <div className="grid-3" style={{ gap: 24 }}>
               {category.products.map((p) => (
                 <ProductCard key={p.id} slug={p.slug} name={p.name} subtitle={p.subtitle} price={p.price} category={p.category.name} imageUrl={p.images[0]?.url} badge={p.badge} />
               ))}

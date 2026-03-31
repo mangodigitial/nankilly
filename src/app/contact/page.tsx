@@ -61,7 +61,7 @@ export default function ContactPage() {
         </div>
 
         <div style={{ padding: "clamp(32px,4vw,56px) clamp(16px,3vw,40px) clamp(60px,6vw,100px)", maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "clamp(32px,4vw,56px)" }}>
+          <div className="grid-contact" style={{ gap: "clamp(32px,4vw,56px)" }}>
             {/* Form */}
             <div>
               {!sent ? (

@@ -28,7 +28,7 @@ export default function DeliveryPage() {
 
         {/* Delivery times */}
         <div style={{ padding: "clamp(36px,4vw,56px) clamp(16px,3vw,40px)", maxWidth: 800, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+          <div className="grid-2" style={{ gap: 2 }}>
             <div style={{ background: "var(--sand)", padding: "clamp(28px,3vw,40px)" }}>
               <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--cornflower)", fontWeight: 500, marginBottom: 14 }}>Made to Order</div>
               <h3 style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 400, marginBottom: 12 }}>7-10 working days</h3>

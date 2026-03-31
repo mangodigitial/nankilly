@@ -44,7 +44,7 @@ export default async function HomePage() {
           </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
+        <div className="grid-3" style={{ gap: 24, maxWidth: 1200, margin: "0 auto" }}>
           {featured.map((p) => (
             <ProductCard
               key={p.id}
@@ -93,7 +93,7 @@ export default async function HomePage() {
 
       {/* Maker section */}
       <section style={{ background: "var(--sand)", position: "relative", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "60vh" }}>
+        <div className="grid-2" style={{ minHeight: "60vh" }}>
           <div style={{ background: "linear-gradient(135deg, var(--sky-pale), var(--linen))", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400, position: "relative", overflow: "hidden" }}>
             {img("maker") ? (
               <Image src={img("maker")!} alt="Emily at Nankilly Farm" fill style={{ objectFit: "cover" }} sizes="50vw" />
@@ -123,7 +123,7 @@ export default async function HomePage() {
 
       {/* Bespoke CTA */}
       <section style={{ position: "relative", padding: "clamp(60px,8vw,120px) clamp(16px,3vw,40px)", background: "var(--ocean)", color: "white", overflow: "hidden" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(32px,4vw,64px)", alignItems: "center" }}>
+        <div className="grid-2" style={{ maxWidth: 1100, margin: "0 auto", gap: "clamp(32px,4vw,64px)", alignItems: "center" }}>
           <div>
             <span style={{ fontSize: 11, fontWeight: 300, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--petal)", display: "block", marginBottom: 16 }}>Bespoke</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(32px,4vw,52px)", fontWeight: 400, lineHeight: 1.15, marginBottom: 24 }}>
@@ -152,7 +152,7 @@ export default async function HomePage() {
       </section>
 
       {/* Info strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderTop: "1px solid rgba(0,0,0,0.06)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+      <div className="grid-3" style={{ borderTop: "1px solid rgba(0,0,0,0.06)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
         {[
           { t: "UK Delivery", d: "Flat rate £5.99 via Royal Mail" },
           { t: "Handmade to Order", d: "Crafted in our coastal studio" },
