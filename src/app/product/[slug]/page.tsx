@@ -12,6 +12,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       category: true,
       images: { orderBy: { sortOrder: "asc" } },
       sizeOptions: { orderBy: { sortOrder: "asc" } },
+      dropdownOptions: { orderBy: { sortOrder: "asc" } },
     },
   });
 
@@ -70,6 +71,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
             hasFabricChoice: product.hasFabricChoice,
             fabricNote: product.fabricNote,
             hasSizeOptions: product.hasSizeOptions,
+            hasDropdown: product.hasDropdown,
+            dropdownLabel: product.dropdownLabel,
+            dropdownOptions: product.dropdownOptions.map(d => ({ label: d.label, priceAdd: d.priceAdd })),
             details: product.details as { label: string; value: string }[] | null,
             badge: product.badge,
             inStock: product.inStock,

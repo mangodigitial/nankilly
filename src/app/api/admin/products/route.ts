@@ -8,7 +8,7 @@ export async function GET() {
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const products = await prisma.product.findMany({
-    include: { category: true, images: { orderBy: { sortOrder: "asc" } }, sizeOptions: { orderBy: { sortOrder: "asc" } } },
+    include: { category: true, images: { orderBy: { sortOrder: "asc" } }, sizeOptions: { orderBy: { sortOrder: "asc" } }, dropdownOptions: { orderBy: { sortOrder: "asc" } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
         hasFabricChoice: body.hasFabricChoice || false,
         fabricNote: body.fabricNote || null,
         hasSizeOptions: body.hasSizeOptions || false,
+        hasDropdown: body.hasDropdown || false,
+        dropdownLabel: body.dropdownLabel || null,
         details: body.details || null,
         badge: body.badge || null,
         active: body.active !== false,
@@ -51,6 +53,15 @@ export async function POST(req: NextRequest) {
                 label: s.label,
                 dimensions: s.dimensions,
                 priceAdd: s.priceAdd || 0,
+                sortOrder: i,
+              })),
+            }
+          : undefined,
+        dropdownOptions: body.dropdownOptions?.length
+          ? {
+              create: body.dropdownOptions.map((d: { label: string; priceAdd?: number }, i: number) => ({
+                label: d.label,
+                priceAdd: d.priceAdd || 0,
                 sortOrder: i,
               })),
             }
@@ -72,7 +83,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, images, sizeOptions, ...data } = body;
+    const { id, images, sizeOptions, dropdownOptions, ...data } = body;
 
     if (!id) return NextResponse.json({ error: "Product ID required" }, { status: 400 });
 
@@ -107,6 +118,21 @@ export async function PUT(req: NextRequest) {
             label: s.label,
             dimensions: s.dimensions,
             priceAdd: s.priceAdd || 0,
+            sortOrder: i,
+          })),
+        });
+      }
+    }
+
+    // Replace dropdown options if provided
+    if (dropdownOptions) {
+      await prisma.dropdownOption.deleteMany({ where: { productId: id } });
+      if (dropdownOptions.length > 0) {
+        await prisma.dropdownOption.createMany({
+          data: dropdownOptions.map((d: { label: string; priceAdd?: number }, i: number) => ({
+            productId: id,
+            label: d.label,
+            priceAdd: d.priceAdd || 0,
             sortOrder: i,
           })),
         });

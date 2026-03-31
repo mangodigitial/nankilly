@@ -85,7 +85,7 @@ export default function CartDrawer({ open, onClose }: { open: boolean; onClose: 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: "var(--font-serif)", fontSize: 13, fontWeight: 400, lineHeight: 1.3, marginBottom: 2 }}>{item.productName}</div>
                   <div style={{ fontSize: 10, color: "var(--ink-soft)", fontWeight: 300 }}>
-                    {[item.sizeName, item.fabricName].filter(Boolean).join(" / ")}
+                    {[item.sizeName, item.fabricName, item.dropdownChoice].filter(Boolean).join(" / ")}
                   </div>
                   {item.personalisation && (
                     <div style={{ fontSize: 10, color: "var(--ocean)", fontStyle: "italic", fontFamily: "var(--font-serif)", marginTop: 2 }}>

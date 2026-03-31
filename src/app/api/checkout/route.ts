@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
               sizeName?: string;
               fabricName?: string;
               personalisation?: string;
+              dropdownChoice?: string;
             }) => ({
               productId: item.productId,
               productName: item.productName,
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
               sizeName: item.sizeName || null,
               fabricName: item.fabricName || null,
               personalisation: item.personalisation || null,
+              dropdownChoice: item.dropdownChoice || null,
             })
           ),
         },

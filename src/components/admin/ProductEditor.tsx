@@ -22,8 +22,11 @@ type ProductForm = {
   hasFabricChoice: boolean;
   fabricNote: string;
   hasSizeOptions: boolean;
+  hasDropdown: boolean;
+  dropdownLabel: string;
   images: { url: string; alt: string }[];
   sizeOptions: { label: string; dimensions: string; priceAdd: string }[];
+  dropdownOptions: { label: string; priceAdd: string }[];
   details: { label: string; value: string }[];
 };
 
@@ -33,7 +36,8 @@ const empty: ProductForm = {
   hasPersonalisation: false, personalisationPrice: "5.00", personalisationNote: "", personalisationMaxChars: "25",
   hasFabricChoice: false, fabricNote: "",
   hasSizeOptions: false,
-  images: [], sizeOptions: [], details: [],
+  hasDropdown: false, dropdownLabel: "",
+  images: [], sizeOptions: [], dropdownOptions: [], details: [],
 };
 
 export default function ProductEditor({ productId, onDone }: { productId?: string; onDone: () => void }) {
@@ -68,9 +72,14 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
             hasFabricChoice: p.hasFabricChoice,
             fabricNote: p.fabricNote || "",
             hasSizeOptions: p.hasSizeOptions,
+            hasDropdown: p.hasDropdown,
+            dropdownLabel: p.dropdownLabel || "",
             images: p.images?.map((i: { url: string; alt?: string }) => ({ url: i.url, alt: i.alt || "" })) || [],
             sizeOptions: p.sizeOptions?.map((s: { label: string; dimensions: string; priceAdd: number }) => ({
               label: s.label, dimensions: s.dimensions, priceAdd: (s.priceAdd / 100).toFixed(2),
+            })) || [],
+            dropdownOptions: p.dropdownOptions?.map((d: { label: string; priceAdd: number }) => ({
+              label: d.label, priceAdd: (d.priceAdd / 100).toFixed(2),
             })) || [],
             details: (p.details as { label: string; value: string }[]) || [],
           });
@@ -106,6 +115,10 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
   const removeSize = (idx: number) => setForm((p) => ({ ...p, sizeOptions: p.sizeOptions.filter((_, i) => i !== idx) }));
   const updateSize = (idx: number, k: string, v: string) => setForm((p) => ({ ...p, sizeOptions: p.sizeOptions.map((s, i) => i === idx ? { ...s, [k]: v } : s) }));
 
+  const addDropdownOpt = () => setForm((p) => ({ ...p, dropdownOptions: [...p.dropdownOptions, { label: "", priceAdd: "0" }] }));
+  const removeDropdownOpt = (idx: number) => setForm((p) => ({ ...p, dropdownOptions: p.dropdownOptions.filter((_, i) => i !== idx) }));
+  const updateDropdownOpt = (idx: number, k: string, v: string) => setForm((p) => ({ ...p, dropdownOptions: p.dropdownOptions.map((d, i) => i === idx ? { ...d, [k]: v } : d) }));
+
   const addDetail = () => setForm((p) => ({ ...p, details: [...p.details, { label: "", value: "" }] }));
   const removeDetail = (idx: number) => setForm((p) => ({ ...p, details: p.details.filter((_, i) => i !== idx) }));
   const updateDetail = (idx: number, k: string, v: string) => setForm((p) => ({ ...p, details: p.details.map((d, i) => i === idx ? { ...d, [k]: v } : d) }));
@@ -125,6 +138,10 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
       sizeOptions: form.sizeOptions.map((s) => ({
         label: s.label, dimensions: s.dimensions,
         priceAdd: Math.round(parseFloat(s.priceAdd || "0") * 100),
+      })),
+      dropdownOptions: form.dropdownOptions.map((d) => ({
+        label: d.label,
+        priceAdd: Math.round(parseFloat(d.priceAdd || "0") * 100),
       })),
     };
 
@@ -202,6 +219,7 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
           { k: "hasFabricChoice", l: "Has fabric choice" },
           { k: "hasPersonalisation", l: "Has personalisation" },
           { k: "hasSizeOptions", l: "Has size options" },
+          { k: "hasDropdown", l: "Has dropdown selector (e.g. Design, Colour Way)" },
         ].map((t) => (
           <label key={t.k} style={checkStyle}>
             <input type="checkbox" checked={(form as Record<string, unknown>)[t.k] as boolean} onChange={(e) => set(t.k, e.target.checked)} />
@@ -254,6 +272,27 @@ export default function ProductEditor({ productId, onDone }: { productId?: strin
           ))}
           <button onClick={addSize} style={{ padding: "8px 16px", border: "1px dashed rgba(0,0,0,0.15)", background: "none", cursor: "pointer", fontSize: 11, color: "#7A7670" }}>
             + Add size
+          </button>
+        </div>
+      )}
+
+      {/* Dropdown options */}
+      {form.hasDropdown && (
+        <div style={{ padding: 20, background: "#E8E0D4", marginBottom: 20 }}>
+          <h4 style={{ fontSize: 12, fontWeight: 500, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.06em" }}>Dropdown Options</h4>
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Dropdown Label (shown to customer)</label>
+            <input value={form.dropdownLabel} onChange={(e) => set("dropdownLabel", e.target.value)} placeholder="e.g. Design, Colour Way, Style" style={inputStyle} />
+          </div>
+          {form.dropdownOptions.map((d, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 80px 30px", gap: 8, marginBottom: 8 }}>
+              <input value={d.label} onChange={(e) => updateDropdownOpt(i, "label", e.target.value)} placeholder="Option name" style={inputStyle} />
+              <input value={d.priceAdd} onChange={(e) => updateDropdownOpt(i, "priceAdd", e.target.value)} placeholder="+0" type="number" step="0.01" style={inputStyle} />
+              <button onClick={() => removeDropdownOpt(i)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#C97B7B" }}>x</button>
+            </div>
+          ))}
+          <button onClick={addDropdownOpt} style={{ padding: "8px 16px", border: "1px dashed rgba(0,0,0,0.15)", background: "none", cursor: "pointer", fontSize: 11, color: "#7A7670" }}>
+            + Add option
           </button>
         </div>
       )}

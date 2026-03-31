@@ -59,7 +59,10 @@ model Product {
   fabricNote      String?
   
   hasSizeOptions Boolean @default(false)
-  
+
+  hasDropdown    Boolean @default(false)
+  dropdownLabel  String?  // e.g. "Design", "Colour Way", "Style"
+
   // Product details
   details   Json?    // array of {label, value} pairs
   badge     String?  // "New", "Bespoke", "Limited" etc
@@ -70,9 +73,10 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  images     ProductImage[]
-  sizeOptions SizeOption[]
-  orderItems  OrderItem[]
+  images         ProductImage[]
+  sizeOptions    SizeOption[]
+  dropdownOptions DropdownOption[]
+  orderItems     OrderItem[]
 }
 
 model ProductImage {
@@ -90,6 +94,15 @@ model SizeOption {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   label     String  // "Standard", "Large", "Lumbar"
   dimensions String // "45x45cm"
+  priceAdd  Int     @default(0) // additional pence
+  sortOrder Int     @default(0)
+}
+
+model DropdownOption {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String  // "Blonde Hair", "Dark Hair", "Sailing Boat"
   priceAdd  Int     @default(0) // additional pence
   sortOrder Int     @default(0)
 }
@@ -146,6 +159,7 @@ model OrderItem {
   sizeName        String?
   fabricName      String?
   personalisation String?
+  dropdownChoice  String?
   
   createdAt       DateTime @default(now())
 }

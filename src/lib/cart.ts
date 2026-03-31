@@ -15,6 +15,7 @@ export interface CartItem {
   sizeName?: string;
   fabricName?: string;
   personalisation?: string;
+  dropdownChoice?: string;
 }
 
 interface CartState {
@@ -30,7 +31,7 @@ interface CartState {
 }
 
 function makeId(item: Omit<CartItem, "id">) {
-  return [item.productId, item.sizeName, item.fabricName, item.personalisation]
+  return [item.productId, item.sizeName, item.fabricName, item.personalisation, item.dropdownChoice]
     .filter(Boolean)
     .join("-");
 }

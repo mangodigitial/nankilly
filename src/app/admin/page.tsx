@@ -7,7 +7,7 @@ type Order = {
   id: string; orderNumber: string; status: string; customerName: string;
   customerEmail: string; total: number; createdAt: string; addressLine1: string;
   city: string; postcode: string;
-  items: { productName: string; quantity: number; sizeName?: string | null; fabricName?: string | null; personalisation?: string | null }[];
+  items: { productName: string; quantity: number; sizeName?: string | null; fabricName?: string | null; personalisation?: string | null; dropdownChoice?: string | null }[];
 };
 
 type Product = {
@@ -243,8 +243,8 @@ export default function AdminPage() {
                         {o.items.map((item, i) => (
                           <div key={i} style={{ fontSize: 13, color: "#4A4845", padding: "6px 0", borderBottom: i < o.items.length - 1 ? "1px solid rgba(0,0,0,0.02)" : "none" }}>
                             <span style={{ fontWeight: 400 }}>{item.quantity}x {item.productName}</span>
-                            {(item.sizeName || item.fabricName) && (
-                              <span style={{ color: "#7A7670", fontWeight: 300 }}>{" / " + [item.sizeName, item.fabricName].filter(Boolean).join(" / ")}</span>
+                            {(item.sizeName || item.fabricName || item.dropdownChoice) && (
+                              <span style={{ color: "#7A7670", fontWeight: 300 }}>{" / " + [item.sizeName, item.fabricName, item.dropdownChoice].filter(Boolean).join(" / ")}</span>
                             )}
                             {item.personalisation && <div style={{ color: "#3A6F8F", fontStyle: "italic", fontSize: 12, marginTop: 2 }}>{'"' + item.personalisation + '"'}</div>}
                           </div>

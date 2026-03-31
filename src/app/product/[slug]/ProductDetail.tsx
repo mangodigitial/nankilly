@@ -20,6 +20,9 @@ interface ProductProps {
     hasFabricChoice: boolean;
     fabricNote: string | null;
     hasSizeOptions: boolean;
+    hasDropdown: boolean;
+    dropdownLabel: string | null;
+    dropdownOptions: { label: string; priceAdd: number }[];
     details: { label: string; value: string }[] | null;
     badge: string | null;
     inStock: boolean;
@@ -40,6 +43,7 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
   const [size, setSize] = useState(product.sizeOptions[0] || null);
   const [persOn, setPersOn] = useState(false);
   const [persText, setPersText] = useState("");
+  const [dropdown, setDropdown] = useState(product.dropdownOptions[0] || null);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [tab, setTab] = useState("story");
@@ -61,7 +65,7 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
     touchStart.current = null;
   };
 
-  const unitPrice = product.price + (size?.priceAdd || 0) + (persOn && persText ? product.personalisationPrice : 0);
+  const unitPrice = product.price + (size?.priceAdd || 0) + (dropdown?.priceAdd || 0) + (persOn && persText ? product.personalisationPrice : 0);
   const total = unitPrice * qty;
   const accentColor = catColors[product.category] || "#F0E6D8";
   const isBunting = product.category === "Bunting";
@@ -78,6 +82,7 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
       sizeName: size?.label,
       fabricName: fabric?.name,
       personalisation: persOn && persText ? persText : undefined,
+      dropdownChoice: dropdown?.label,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
@@ -327,8 +332,35 @@ export default function ProductDetail({ product, fabrics }: ProductProps) {
             </div>
           )}
 
-          {/* SIZE + PURCHASE */}
+          {/* DROPDOWN + SIZE + PURCHASE */}
           <div style={{ paddingTop: 28 }}>
+            {/* Custom dropdown */}
+            {product.hasDropdown && product.dropdownOptions.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 10, fontWeight: 500 }}>
+                  {product.dropdownLabel || "Option"}
+                </div>
+                <div style={{ position: "relative" }}>
+                  <select
+                    value={dropdown?.label || ""}
+                    onChange={(e) => { const d = product.dropdownOptions.find(o => o.label === e.target.value); if (d) setDropdown(d); }}
+                    style={{
+                      width: "100%", padding: "14px 40px 14px 16px", fontSize: 14,
+                      border: "1.5px solid rgba(0,0,0,0.1)", background: "var(--white)",
+                      cursor: "pointer", appearance: "none", fontFamily: "inherit", color: "var(--ink)",
+                    }}
+                  >
+                    {product.dropdownOptions.map(d => (
+                      <option key={d.label} value={d.label}>
+                        {d.label}{d.priceAdd > 0 ? ` (+£${(d.priceAdd / 100).toFixed(2)})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><path d="M2 4l4 4 4-4" stroke="var(--ink-soft)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+              </div>
+            )}
+
             {product.hasSizeOptions && product.sizeOptions.length > 0 && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 10, fontWeight: 500 }}>
